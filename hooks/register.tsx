@@ -3,7 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 import { describeUsage } from './format'
 
 // An engine action with no default chord and no handler at the prompt; the
-// person binds a chord such as ctrl+x ctrl+u to it in keybindings.json (Global),
+// person binds a chord such as ctrl+u to it in keybindings.json (Global),
 // which presses the Button below from anywhere. Not an Alt chord: in the Windows
 // console Alt makes NVDA re-announce the window title (see README).
 const ACTION = 'app:toggleDiffNoiseFilter'

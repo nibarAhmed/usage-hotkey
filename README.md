@@ -41,7 +41,7 @@ chord to it in `~/.claude/keybindings.json` (merge into any bindings you have):
   "bindings": [
     {
       "context": "Global",
-      "bindings": { "ctrl+x ctrl+u": "app:toggleDiffNoiseFilter" }
+      "bindings": { "ctrl+u": "app:toggleDiffNoiseFilter" }
     }
   ]
 }
@@ -72,7 +72,7 @@ chord or prompt handler, re-check that your key still speaks.
 - **NVDA reads the window title when you press the key:** your chord uses Alt,
   and the Windows console makes NVDA re-announce the window whenever Alt is
   pressed (try an unbound Alt chord: it does the same). Bind a Ctrl chord such
-  as `ctrl+x ctrl+u` instead.
+  as `ctrl+u` instead.
 
 ## How it works
 
