@@ -19,7 +19,7 @@ const speakUsage = async ($: EngineInterface) => {
     const { exitCode, stderr } = await $.process.run(
       [
         'powershell',
-        ...['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass'],
+        ...['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass'],
         ...['-File', `${$.plugin.root}/scripts/speak.ps1`, '-Root', $.plugin.root]
       ],
       { stdin: describeUsage(usage, now) }
