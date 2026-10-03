@@ -1,6 +1,6 @@
 {
   "name": "usage-hotkey",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A screen-reader hotkey for Claude Code: speaks context tokens, session and weekly usage with reset times, then cost, through NVDA.",
   "author": { "name": "nibarAhmed" },
   "license": "MIT",

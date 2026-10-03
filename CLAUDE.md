@@ -11,6 +11,7 @@ A Claude Code plugin (a "mods" hooks module, not a Node package; `package.json` 
 - Run the tests: `claude plugin test .` (runs every `hooks/*.test.ts` under the `claude-code/testing` kit; there is no fs, network or process in that environment).
 - Type-check: `npm run typecheck`, i.e. `tsc -p tsconfig.json` with the local TypeScript (config extends `.claude-plugin/types/tsconfig.json`, which has `noEmit`, `strict`, and a `jsx: react` / `h` factory).
 - Try it live without installing: `claude --plugin-dir <this folder>`, then `/reload-plugins` after edits.
+- Reach the installed copy: Claude Code runs a cached snapshot under `~/.claude/plugins/cache/usage-hotkey/usage-hotkey/<version>/`, keyed by `version` in `.claude-plugin/plugin.json`. Bump the version, then `claude plugin marketplace update usage-hotkey` and `claude plugin update usage-hotkey@usage-hotkey`; otherwise repo fixes never run (this is why the window-title announcement "came back").
 
 `.claude-plugin/types/` holds the engine's type declarations (`claude-code`, `claude-code-tools`, `claude-code-mcp`); it is gitignored, so treat it as generated reference material. `claude-code/index.d.ts` is the authoritative description of `$` (the engine interface), the render hooks and the testing kit.
 
