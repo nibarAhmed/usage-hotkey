@@ -80,13 +80,12 @@ chord or prompt handler, re-check that your key still speaks.
   the terminal only, beside whatever other mods draw there. The chord can only
   press a button that is mounted, which is why the button exists.
 - Pressing it reads `$.session.usage()`, builds the sentence in `hooks/format.ts`
-  and pipes it to `bin/speak.exe`.
-- `bin/speak.exe` (source: `scripts/speak.cs`, rebuilt with
-  `scripts\build-speak.cmd`) loads the NVDA controller client DLL that matches
-  its architecture (x64, x86 or arm64) from `bin/` and calls
+  and pipes it to `scripts/speak.ps1`, run with `-ExecutionPolicy Bypass` and a
+  hidden window.
+- `scripts/speak.ps1` loads the NVDA controller client DLL that matches
+  PowerShell's architecture (x64, x86 or arm64) from `bin/` and calls
   `nvdaController_cancelSpeech` then `nvdaController_speakText`. The text only
-  travels on stdin, so nothing in it is run as a command. It is a windowless
-  program, so it starts fast and never opens a console.
+  travels on stdin, so nothing in it is run as a command.
 
 ## Licenses
 
