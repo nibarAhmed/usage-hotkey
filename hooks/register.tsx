@@ -34,19 +34,23 @@ const speakUsage = async ($: EngineInterface) => {
 }
 
 export const register: Register = on => {
-  on('ui.render', { component: 'AbovePrompt' }, ($, e, next) => {
-    if (e.props.hasSurvey) {
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    // The chord only reaches a Button on the terminal, and a survey holds the band.
+    if (e.surface !== 'terminal' || e.props.hasSurvey) {
       return next(e)
     }
 
     const { Box, Button } = $.ui.resolve(e)
+    const rest = await next(e)
 
-    // The label is a blank: the Button only has to be mounted for the chord to
-    // reach it. onPress returns at once so a speech call still in flight cannot
-    // hold the next press back.
+    // The Button only has to be mounted for the chord to reach it. It is labelled
+    // so a screen reader that focuses the band hears a name, and dim so it stays
+    // quiet to the eye. onPress returns at once so a speech call still in flight
+    // cannot hold the next press back. What other hooks drew stays above it.
     return (
-      <Box>
-        <Button key="usage" label=" " action={ACTION} plain onPress={() => void speakUsage($)} />
+      <Box flexDirection="column">
+        {rest}
+        <Button key="usage" label="Speak usage" action={ACTION} plain dimColor onPress={() => void speakUsage($)} />
       </Box>
     )
   })

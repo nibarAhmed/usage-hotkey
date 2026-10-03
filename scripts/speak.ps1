@@ -28,6 +28,7 @@ public static class Nvda {
 }
 "@
 
+[Console]::InputEncoding = [Text.Encoding]::UTF8
 $text = [Console]::In.ReadToEnd()
 [void][Nvda]::nvdaController_cancelSpeech()
 exit [Nvda]::nvdaController_speakText($text)

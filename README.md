@@ -46,8 +46,16 @@ chord to it in `~/.claude/keybindings.json` (merge into any bindings you have):
 ```
 
 Any chord works. Avoid `ctrl+c`, `ctrl+d`, `ctrl+z` and keys your terminal or
-screen reader already uses. If you open Claude Code's diff panel, that panel
-handles the action itself and the hotkey will not speak there.
+screen reader already uses. The action belongs to Claude Code's older diff
+panel, which only opens if you disable the built-in `cc-plugin-diff` mod in
+`/plugin`. In a default install nothing else handles it. If you do disable that
+mod and open the older panel, the panel takes the action and the hotkey will not
+speak there.
+
+The plugin draws a small dim "Speak usage" button above the prompt, which is
+what the chord presses; it can also be pressed by focusing the band. The action
+is borrowed, so if a Claude Code update gives `app:toggleDiffNoiseFilter` its own
+chord or prompt handler, re-check that your key still speaks.
 
 ## Troubleshooting
 
@@ -55,16 +63,17 @@ handles the action itself and the hotkey will not speak there.
   running. Start it and press the key again.
 - **Nothing happens at all:** check that the plugin is loaded (`/reload-plugins`)
   and that the chord is bound to `app:toggleDiffNoiseFilter` in the `Global`
-  context. A dialog or the diff panel being open also stops the key.
+  context. An open dialog also stops the key, as does the older diff panel if you
+  have disabled `cc-plugin-diff`.
 - **NVDA reads the window title when you press the key:** this plugin starts
   PowerShell hidden to avoid that. If you still hear it, the key itself may be
   triggering your terminal; try a different chord.
 
 ## How it works
 
-- `hooks/register.tsx` draws one blank button above the prompt. The chord can
-  only press a button that is mounted, so the button exists but shows and says
-  nothing.
+- `hooks/register.tsx` draws one dim "Speak usage" button above the prompt, on
+  the terminal only, beside whatever other mods draw there. The chord can only
+  press a button that is mounted, which is why the button exists.
 - Pressing it reads `$.session.usage()`, builds the sentence in `hooks/format.ts`
   and pipes it to `scripts/speak.ps1`, run with `-ExecutionPolicy Bypass` and a
   hidden window.
