@@ -56,8 +56,8 @@ panel, which only opens if you disable the built-in `cc-plugin-diff` mod in
 mod and open the older panel, the panel takes the action and the hotkey will not
 speak there.
 
-The plugin draws a small dim "Speak usage" button above the prompt, which is
-what the chord presses; it can also be pressed by focusing the band. The action
+The plugin mounts a hidden "Speak usage" button above the prompt (nothing is
+drawn), which is what the chord presses. The action
 is borrowed, so if a Claude Code update gives `app:toggleDiffNoiseFilter` its own
 chord or prompt handler, re-check that your key still speaks.
 
@@ -76,9 +76,9 @@ chord or prompt handler, re-check that your key still speaks.
 
 ## How it works
 
-- `hooks/register.tsx` draws one dim "Speak usage" button above the prompt, on
-  the terminal only, beside whatever other mods draw there. The chord can only
-  press a button that is mounted, which is why the button exists.
+- `hooks/register.tsx` mounts one hidden (`display="none"`) "Speak usage" button
+  above the prompt, on the terminal only, beside whatever other mods draw there.
+  The chord can only press a button that is mounted, which is why the button exists.
 - Pressing it reads `$.session.usage()`, builds the sentence in `hooks/format.ts`
   and pipes it to `scripts/speak.ps1`, run with `-ExecutionPolicy Bypass` and a
   hidden window.

@@ -44,14 +44,16 @@ export const register: Register = on => {
     const { Box, Button } = $.ui.resolve(e)
     const rest = await next(e)
 
-    // The Button only has to be mounted for the chord to reach it. It is labelled
-    // so a screen reader that focuses the band hears a name, and dim so it stays
-    // quiet to the eye. onPress returns at once so a speech call still in flight
-    // cannot hold the next press back. What other hooks drew stays above it.
+    // The Button only has to be mounted for the chord to reach it, so it is drawn
+    // inside a display="none" Box: present, never shown. It keeps a label as its
+    // name. onPress returns at once so a speech call still in flight cannot hold
+    // the next press back. What other hooks drew stays above it.
     return (
       <Box flexDirection="column">
         {rest}
-        <Button key="usage" label="Speak usage" action={ACTION} plain dimColor onPress={() => void speakUsage($)} />
+        <Box display="none">
+          <Button key="usage" label="Speak usage" action={ACTION} plain onPress={() => void speakUsage($)} />
+        </Box>
       </Box>
     )
   })
