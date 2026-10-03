@@ -51,7 +51,7 @@ export const resetClock = (resetsAt: string | undefined, now: number): string =>
   // Newer ICU puts a no-break or narrow no-break space before AM/PM.
   const time = date
     .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-    .replace(/[  ]/g, ' ')
+    .replace(/[\u00A0\u202F]/g, ' ')
     .replace(':00', '')
   const isToday = date.toDateString() === new Date(now).toDateString()
 

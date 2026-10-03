@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A Claude Code plugin (a "mods" hooks module, not a Node package; there is no `package.json`) that speaks the user's Claude Code usage through NVDA on a hotkey. Windows + NVDA only. See `README.md` for install and key-binding instructions.
+A Claude Code plugin (a "mods" hooks module, not a Node package; `package.json` exists only to pin TypeScript for type-checking, so run `npm install` once) that speaks the user's Claude Code usage through NVDA on a hotkey. Windows + NVDA only. See `README.md` for install and key-binding instructions.
 
 ## Commands
 
 - Run the tests: `claude plugin test .` (runs every `hooks/*.test.ts` under the `claude-code/testing` kit; there is no fs, network or process in that environment).
-- Type-check: `tsc -p tsconfig.json` (config extends `.claude-plugin/types/tsconfig.json`, which has `noEmit`, `strict`, and a `jsx: react` / `h` factory).
+- Type-check: `npm run typecheck`, i.e. `tsc -p tsconfig.json` with the local TypeScript (config extends `.claude-plugin/types/tsconfig.json`, which has `noEmit`, `strict`, and a `jsx: react` / `h` factory).
 - Try it live without installing: `claude --plugin-dir <this folder>`, then `/reload-plugins` after edits.
 
 `.claude-plugin/types/` holds the engine's type declarations (`claude-code`, `claude-code-tools`, `claude-code-mcp`); it is gitignored, so treat it as generated reference material. `claude-code/index.d.ts` is the authoritative description of `$` (the engine interface), the render hooks and the testing kit.

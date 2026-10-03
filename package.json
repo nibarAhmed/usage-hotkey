@@ -1,0 +1,14 @@
+{
+  "name": "usage-hotkey",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dev tooling only: the plugin itself is loaded through .claude-plugin/plugin.json, not as a Node package.",
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "claude plugin test ."
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}
