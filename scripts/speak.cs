@@ -2,10 +2,8 @@
 // controller client DLL bundled under bin/<arch>/. Exits with NVDA's own status
 // (0 on success); 2 when no DLL matches this machine.
 //
-// Built as a GUI-subsystem exe (/target:winexe) on purpose: a console program,
-// even a hidden one, makes Windows create or attach a console first, and NVDA
-// then announces the terminal window title on every press. A winexe never gets
-// a console, while its inherited stdin/stderr pipes and exit code still work.
+// Built as a GUI-subsystem exe (/target:winexe) so it starts fast and never
+// gets a console, while its inherited stdin/stderr pipes and exit code still work.
 //
 // Cancelling first makes a repeat press restart the reading instead of queueing
 // behind it. The text only ever arrives on stdin, so nothing in it is parsed as

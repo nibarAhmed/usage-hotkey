@@ -3,16 +3,16 @@ import type { EngineInterface, Register } from 'claude-code'
 import { describeUsage } from './format'
 
 // An engine action with no default chord and no handler at the prompt; the
-// person binds alt+u to it in keybindings.json (Global), which presses the
-// Button below from anywhere.
+// person binds a chord such as ctrl+x ctrl+u to it in keybindings.json (Global),
+// which presses the Button below from anywhere. Not an Alt chord: in the Windows
+// console Alt makes NVDA re-announce the window title (see README).
 const ACTION = 'app:toggleDiffNoiseFilter'
 
 // Speaking goes through bin/speak.exe (source: scripts/speak.cs) and the NVDA
 // controller client bundled under bin/ ($.audio.speak has no synthesizer on
 // Windows, and would not be NVDA's voice if it had). The helper is a windowless
-// GUI-subsystem exe because any console program, even a hidden powershell, makes
-// NVDA announce the terminal's window title. The text goes in on stdin; the exit
-// code is NVDA's.
+// GUI-subsystem exe, so it starts fast and never opens a console. The text goes
+// in on stdin; the exit code is NVDA's.
 const speakUsage = async ($: EngineInterface) => {
   const fail = (why: string) => $.ui.toast(`Could not speak through NVDA: ${why}`)
 

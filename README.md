@@ -41,14 +41,16 @@ chord to it in `~/.claude/keybindings.json` (merge into any bindings you have):
   "bindings": [
     {
       "context": "Global",
-      "bindings": { "alt+u": "app:toggleDiffNoiseFilter" }
+      "bindings": { "ctrl+x ctrl+u": "app:toggleDiffNoiseFilter" }
     }
   ]
 }
 ```
 
-Any chord works. Avoid `ctrl+c`, `ctrl+d`, `ctrl+z` and keys your terminal or
-screen reader already uses. The action belongs to Claude Code's older diff
+Avoid chords that use Alt (`alt+…`, `meta+…`): in the Windows console, pressing
+Alt makes NVDA read the window title ("cmd.exe terminal …") again, whatever the
+key is bound to. Also avoid `ctrl+c`, `ctrl+d`, `ctrl+z` and keys your terminal
+or screen reader already uses. The action belongs to Claude Code's older diff
 panel, which only opens if you disable the built-in `cc-plugin-diff` mod in
 `/plugin`. In a default install nothing else handles it. If you do disable that
 mod and open the older panel, the panel takes the action and the hotkey will not
@@ -67,9 +69,10 @@ chord or prompt handler, re-check that your key still speaks.
   and that the chord is bound to `app:toggleDiffNoiseFilter` in the `Global`
   context. An open dialog also stops the key, as does the older diff panel if you
   have disabled `cc-plugin-diff`.
-- **NVDA reads the window title when you press the key:** this plugin starts
-  PowerShell hidden to avoid that. If you still hear it, the key itself may be
-  triggering your terminal; try a different chord.
+- **NVDA reads the window title when you press the key:** your chord uses Alt,
+  and the Windows console makes NVDA re-announce the window whenever Alt is
+  pressed (try an unbound Alt chord: it does the same). Bind a Ctrl chord such
+  as `ctrl+x ctrl+u` instead.
 
 ## How it works
 
@@ -83,8 +86,7 @@ chord or prompt handler, re-check that your key still speaks.
   its architecture (x64, x86 or arm64) from `bin/` and calls
   `nvdaController_cancelSpeech` then `nvdaController_speakText`. The text only
   travels on stdin, so nothing in it is run as a command. It is a windowless
-  program on purpose: a console program, even a hidden one, makes NVDA announce
-  the terminal's window title on every press.
+  program, so it starts fast and never opens a console.
 
 ## Licenses
 
