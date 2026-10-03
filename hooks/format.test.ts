@@ -49,7 +49,7 @@ describe('describeUsage', () => {
         NOW
       )
     ).toMatch(
-      /^Context 45,000 of 200,000 tokens, 23 percent\. Session 24 percent used, resets in 2 hours 10 minutes, at \d{1,2}(:\d\d)? [AP]M\. Weekly 41 percent used, resets in 2 days 3 hours, at \w+day \d{1,2}(:\d\d)? [AP]M\. Cost 1\.23 dollars\.$/
+      /^Context 45,000 of 200,000 tokens\. Session 24 percent used, resets in 2 hours 10 minutes, at \d{1,2}(:\d\d)? [AP]M\. Weekly 41 percent used, resets in 2 days 3 hours, at \w+day \d{1,2}(:\d\d)? [AP]M\. Cost 1\.23 dollars\.$/
     )
   })
 

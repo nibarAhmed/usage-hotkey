@@ -65,14 +65,12 @@ const describeLimit = (limit: SessionRateLimit, now: number): string => {
   return `${LABELS[limit.kind] ?? limit.kind} ${Math.round(limit.percentUsed)} percent used, ${untilReset(limit.resetsAt, now)}${at}`
 }
 
-const describeContext = ({ tokens, window, percent }: SessionUsage['context']): string => {
+const describeContext = ({ tokens, window }: SessionUsage['context']): string => {
   if (tokens === undefined) {
     return `Context window ${count(window)} tokens, no reading yet`
   }
 
-  const share = percent === undefined ? '' : `, ${Math.round(percent)} percent`
-
-  return `Context ${count(tokens)} of ${count(window)} tokens${share}`
+  return `Context ${count(tokens)} of ${count(window)} tokens`
 }
 
 export const describeUsage = (usage: SessionUsage, now: number): string => {
