@@ -7,9 +7,12 @@ import { describeUsage } from './format'
 // Button below from anywhere.
 const ACTION = 'app:toggleDiffNoiseFilter'
 
-// Speaking goes through scripts/speak.ps1 and the NVDA controller client bundled
-// under bin/ ($.audio.speak has no synthesizer on Windows, and would not be
-// NVDA's voice if it had). The text goes in on stdin; the exit code is NVDA's.
+// Speaking goes through bin/speak.exe (source: scripts/speak.cs) and the NVDA
+// controller client bundled under bin/ ($.audio.speak has no synthesizer on
+// Windows, and would not be NVDA's voice if it had). The helper is a windowless
+// GUI-subsystem exe because any console program, even a hidden powershell, makes
+// NVDA announce the terminal's window title. The text goes in on stdin; the exit
+// code is NVDA's.
 const speakUsage = async ($: EngineInterface) => {
   const fail = (why: string) => $.ui.toast(`Could not speak through NVDA: ${why}`)
 
@@ -17,11 +20,7 @@ const speakUsage = async ($: EngineInterface) => {
     const [usage, now] = await Promise.all([$.session.usage(), $.clock.now()])
 
     const { exitCode, stderr } = await $.process.run(
-      [
-        'powershell',
-        ...['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass'],
-        ...['-File', `${$.plugin.root}/scripts/speak.ps1`, '-Root', $.plugin.root]
-      ],
+      [`${$.plugin.root}/bin/speak.exe`, $.plugin.root],
       { stdin: describeUsage(usage, now) }
     )
 
