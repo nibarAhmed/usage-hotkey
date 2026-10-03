@@ -1,0 +1,12 @@
+{
+  "name": "usage-hotkey",
+  "owner": { "name": "nibarAhmed" },
+  "description": "Accessibility plugins for Claude Code screen reader users.",
+  "plugins": [
+    {
+      "name": "usage-hotkey",
+      "source": "./",
+      "description": "Speaks Claude Code context tokens, session and weekly usage with reset times, then cost, through NVDA on a hotkey."
+    }
+  ]
+}
