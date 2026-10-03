@@ -11,14 +11,16 @@ and cost.
 
 ## Install
 
-From a clone of this repository:
-
 ```
-claude plugin marketplace add <path to this folder>
+claude plugin marketplace add nibarAhmed/usage-hotkey
 claude plugin install usage-hotkey@usage-hotkey
 ```
 
-Or try it for one session without installing:
+Or from inside Claude Code: `/plugin marketplace add nibarAhmed/usage-hotkey`,
+then `/plugin install usage-hotkey@usage-hotkey`.
+
+To try it from a local clone, pass the folder path to `marketplace add`, or load
+it for one session without installing:
 
 ```
 claude --plugin-dir <path to this folder>
