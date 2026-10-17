@@ -77,7 +77,7 @@ export const observe = (
       const gain = Math.max(0, percentUsed - held.last)
 
       moved ||= gain > 0
-      windows[kind] = { used: used + gain * part, last: held.last + gain, resetsAt }
+      windows[kind] = { used: used + gain * part, last: Math.max(held.last, percentUsed), resetsAt }
     }
   }
 
@@ -100,15 +100,24 @@ export type Reading = {
 // The readings kept, enough to see what a wrong figure was built from.
 export const LOG = 20
 
-// Adds a reading to the end of the log, dropping the oldest past LOG. One whose
-// windows read the same as the last one's (a press between replies) is left out,
-// and the log handed back as it was.
-export const logReading = (log: readonly Reading[], reading: Reading): readonly Reading[] => {
+// Adds a reading, and the tally after it, to the end of the log, dropping the
+// oldest past LOG. One whose windows read the same as the last one's (a press
+// between replies) is left out, and the log handed back as it was.
+export const logReading = (
+  log: readonly Reading[],
+  at: number,
+  limits: readonly SessionRateLimit[],
+  tally: Tally
+): readonly Reading[] => {
   const last = log[log.length - 1]
 
-  if (last && JSON.stringify(last.limits) === JSON.stringify(reading.limits)) {
+  if (last && JSON.stringify(last.limits) === JSON.stringify(limits)) {
     return log
   }
 
-  return [...log, reading].slice(-LOG)
+  const used = Object.fromEntries(
+    Object.entries(tally.windows).map(([kind, w]) => [kind, Number(w.used.toFixed(1))])
+  )
+
+  return [...log, { at, limits, used }].slice(-LOG)
 }

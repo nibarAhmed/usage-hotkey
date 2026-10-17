@@ -24,6 +24,8 @@ const STALE = 7 * 24 * 60 * 60 * 1000
 
 type Entry = { usd: number; at: number; readings?: readonly Reading[] }
 
+// A new log is a new array (logReading hands back the same one when it skips),
+// so write() tells a changed log from the one it last wrote by reference.
 let readings: readonly Reading[] = []
 
 // The first session id this module saw, kept across a /clear: a new id whose
@@ -96,8 +98,7 @@ const track = async ($: EngineInterface) => {
   tally = observe(tally, usage.startedAt, usage.rateLimits, { me: id, ledger })
 
   if (usage.rateLimits.length) {
-    const used = Object.fromEntries(Object.entries(tally.windows).map(([kind, w]) => [kind, w.used]))
-    const next = logReading(readings, { at: now, limits: usage.rateLimits, used })
+    const next = logReading(readings, now, usage.rateLimits, tally)
 
     if (next !== readings) {
       readings = next

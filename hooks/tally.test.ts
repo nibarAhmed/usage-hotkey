@@ -114,13 +114,15 @@ describe('share', () => {
 })
 
 describe('logReading', () => {
-  const reading = (at: number, percentUsed: number): Reading => ({ at, limits: [five(percentUsed)], used: {} })
+  const tally = observe(undefined, 1, [five(20)])
+  const add = (log: readonly Reading[], at: number, percentUsed: number) =>
+    logReading(log, at, [five(percentUsed)], tally)
 
   test('keeps the last readings, oldest dropped first', () => {
     let log: readonly Reading[] = []
 
     for (let at = 0; at < LOG + 5; at++) {
-      log = logReading(log, reading(at, at))
+      log = add(log, at, at)
     }
 
     expect(log).toHaveLength(LOG)
@@ -129,9 +131,15 @@ describe('logReading', () => {
   })
 
   test('a reading the same as the last one is left out, handing the log back as it was', () => {
-    const log = logReading([], reading(1, 20))
+    const log = add([], 1, 20)
 
-    expect(logReading(log, reading(2, 20))).toBe(log)
-    expect(logReading(log, reading(3, 21))).toHaveLength(2)
+    expect(add(log, 2, 20)).toBe(log)
+    expect(add(log, 3, 21)).toHaveLength(2)
+  })
+
+  test("keeps what the conversation had used of each window, to one decimal", () => {
+    const log = logReading([], 1, [five(20)], observe(observe(undefined, 1, [five(20)]), 1, [five(21.25)]))
+
+    expect(log[0]?.used).toEqual({ five_hour: 1.3 })
   })
 })
