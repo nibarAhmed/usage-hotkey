@@ -33,8 +33,9 @@ let self: Promise<string> | undefined
 const me = ($: EngineInterface) => (self ??= $.session.id())
 
 // What was last written, so a step that spent nothing new and logged no reading
-// (a burst of queued writes reads one figure) skips the store; it is still
-// rewritten hourly so an idle session's entry is not pruned as stale.
+// (a burst of queued writes reads one figure) skips the store. A figure is still
+// rewritten when its last write is over an hour old, so a session that steps
+// without spending keeps its entry fresh; one with no steps at all writes nothing.
 let written: Entry | undefined
 const REFRESH = 60 * 60 * 1000
 
@@ -42,8 +43,11 @@ const write = async ($: EngineInterface) => {
   const [id, { cost }, at] = await Promise.all([me($), $.session.usage(), $.clock.now()])
 
   if (cost && (cost.usd !== written?.usd || readings !== written.readings || at - written.at > REFRESH)) {
-    written = { usd: cost.usd, at, readings }
-    await $.store.set(`${SPEND}${id}`, written)
+    const entry: Entry = { usd: cost.usd, at, readings }
+
+    // Only remembered once it landed, so a failed write is tried again next step
+    await $.store.set(`${SPEND}${id}`, entry)
+    written = entry
   }
 }
 
@@ -56,8 +60,10 @@ const publish = ($: EngineInterface) => {
   publishing = publishing.then(() => write($)).catch(() => {})
 }
 
-// Stale entries are dropped without waiting on the deletes.
-const readLedger = async ($: EngineInterface, now: number) => {
+// Stale entries are dropped without waiting on the deletes. Our own is never
+// dropped here: a delete landing after the write running alongside it would
+// remove a fresh entry that the skip in write() would then not restore.
+const readLedger = async ($: EngineInterface, id: string, now: number) => {
   const ledger: Ledger = {}
   const keys = (await $.store.keys()).filter(key => key.startsWith(SPEND))
 
@@ -66,7 +72,9 @@ const readLedger = async ($: EngineInterface, now: number) => {
       const entry = (await $.store.get(key)) as Entry | undefined
 
       if (!entry || now - entry.at > STALE) {
-        void $.store.delete(key).catch(() => {})
+        if (key !== `${SPEND}${id}`) {
+          void $.store.delete(key).catch(() => {})
+        }
       } else {
         ledger[key.slice(SPEND.length)] = entry.usd
       }
@@ -78,7 +86,7 @@ const readLedger = async ($: EngineInterface, now: number) => {
 
 const track = async ($: EngineInterface) => {
   const [usage, id, now] = await Promise.all([$.session.usage(), me($), $.clock.now()])
-  const ledger = await readLedger($, now)
+  const ledger = await readLedger($, id, now)
 
   // Our own figure is the freshest there is, whatever the store holds yet
   if (usage.cost) {
@@ -132,7 +140,7 @@ export const register: Register = on => {
   // awaited, so the next step never waits on the store.
   on('turn.step', async function* ($, e, next) {
     const result = yield* next(e)
-    void publish($)
+    publish($)
 
     return result
   })
@@ -140,7 +148,7 @@ export const register: Register = on => {
   // After each turn: counts every reply, including the first after a /clear.
   // Publishes too, as the cost a step adds may land only after its turn.step.
   on('session.measure', async ($, e, next) => {
-    void publish($)
+    publish($)
     await track($)
 
     return next(e)
