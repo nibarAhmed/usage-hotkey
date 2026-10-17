@@ -53,7 +53,7 @@ describe('describeUsage', () => {
     )
   })
 
-  test('ends with what this conversation used of each window, after the cost', () => {
+  test('says what this conversation used of each window, before the cost', () => {
     expect(
       describeUsage(
         { context: { window: 200000 }, cost: { usd: 1 }, rateLimits: [] } as never,
@@ -67,7 +67,7 @@ describe('describeUsage', () => {
         }
       )
     ).toBe(
-      'Context window 200,000 tokens, no reading yet. No usage limit reading yet. Cost 1.00 dollars. This conversation used 3.4 percent of Session, 0 percent of Weekly.'
+      'Context window 200,000 tokens, no reading yet. No usage limit reading yet. This conversation used 3.4 percent of Session, 0 percent of Weekly. Cost 1.00 dollars.'
     )
   })
 

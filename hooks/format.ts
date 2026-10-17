@@ -92,5 +92,5 @@ export const describeUsage = (usage: SessionUsage, now: number, tally?: Tally): 
     : ['No usage limit reading yet']
   const cost = usage.cost ? [`Cost ${usage.cost.usd.toFixed(2)} dollars`] : []
 
-  return `${[describeContext(usage.context), ...limits, ...cost, ...describeTally(tally)].join('. ')}.`
+  return `${[describeContext(usage.context), ...limits, ...describeTally(tally), ...cost].join('. ')}.`
 }
