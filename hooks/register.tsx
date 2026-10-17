@@ -1,7 +1,7 @@
 import type { EngineInterface, Register } from 'claude-code'
 
 import { describeUsage } from './format'
-import { observe, type Tally } from './tally'
+import { observe, type Ledger, type Tally } from './tally'
 
 // An engine action with no default chord and no handler at the prompt; the
 // person binds a chord such as ctrl+u to it in keybindings.json (Global),
@@ -29,11 +29,18 @@ let self: Promise<string> | undefined
 
 const me = ($: EngineInterface) => (self ??= $.session.id())
 
+// What was last written, so a step that spent nothing new (a burst of queued
+// writes reads one figure) skips the store; it is still rewritten hourly so an
+// idle session's entry is not pruned as stale.
+let written: Entry | undefined
+const REFRESH = 60 * 60 * 1000
+
 const write = async ($: EngineInterface) => {
   const [id, { cost }, at] = await Promise.all([me($), $.session.usage(), $.clock.now()])
 
-  if (cost) {
-    await $.store.set(`${SPEND}${id}`, { usd: cost.usd, at } satisfies Entry)
+  if (cost && (cost.usd !== written?.usd || at - written.at > REFRESH)) {
+    written = { usd: cost.usd, at }
+    await $.store.set(`${SPEND}${id}`, written)
   }
 }
 
@@ -44,27 +51,24 @@ let publishing = Promise.resolve()
 
 const publish = ($: EngineInterface) => {
   publishing = publishing.then(() => write($)).catch(() => {})
-
-  return publishing
 }
 
+// Stale entries are dropped without waiting on the deletes.
 const readLedger = async ($: EngineInterface, now: number) => {
-  const ledger: Record<string, number> = {}
-
+  const ledger: Ledger = {}
   const keys = (await $.store.keys()).filter(key => key.startsWith(SPEND))
-  const entries = await Promise.all(keys.map(key => $.store.get(key) as Promise<Entry | undefined>))
-  const stale: Promise<void>[] = []
 
-  keys.forEach((key, i) => {
-    const entry = entries[i]
+  await Promise.all(
+    keys.map(async key => {
+      const entry = (await $.store.get(key)) as Entry | undefined
 
-    if (!entry || now - entry.at > STALE) {
-      stale.push($.store.delete(key))
-    } else {
-      ledger[key.slice(SPEND.length)] = entry.usd
-    }
-  })
-  await Promise.all(stale)
+      if (!entry || now - entry.at > STALE) {
+        void $.store.delete(key).catch(() => {})
+      } else {
+        ledger[key.slice(SPEND.length)] = entry.usd
+      }
+    })
+  )
 
   return ledger
 }

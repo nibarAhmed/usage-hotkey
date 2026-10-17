@@ -4,11 +4,13 @@ import type { SessionRateLimit } from 'claude-code'
 // points counted so far, and the last reading they were counted from.
 type Window = { used: number; last: number; resetsAt?: string }
 
-// What every running session has spent so far, in dollars, by session id: the
-// ledger all sessions share, and which entry is this session's.
-export type Spend = { me: string; ledger: Record<string, number> }
+// What every running session has spent so far, in dollars, by session id.
+export type Ledger = Record<string, number>
 
-export type Tally = { startedAt: number; windows: Record<string, Window>; ledger?: Record<string, number> }
+// The ledger all sessions share, and which entry is this session's.
+export type Spend = { me: string; ledger: Ledger }
+
+export type Tally = { startedAt: number; windows: Record<string, Window>; ledger?: Ledger }
 
 // A later reset time than the one held means the window rolled over.
 const rolled = (held: string | undefined, seen: string | undefined) =>
@@ -19,7 +21,7 @@ const rolled = (held: string | undefined, seen: string | undefined) =>
 // spent meanwhile. A total that went down started over (a /clear). Nothing spent
 // anywhere means the points came from outside Claude Code, so none are ours.
 // Without a ledger (or an empty one) every point is ours, as before there was one.
-export const share = (held: Record<string, number> | undefined, spend: Spend | undefined): number => {
+export const share = (held: Ledger | undefined, spend: Spend | undefined): number => {
   if (!spend || Object.keys(spend.ledger).length === 0) {
     return 1
   }
