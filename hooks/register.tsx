@@ -23,32 +23,54 @@ const STALE = 7 * 24 * 60 * 60 * 1000
 
 type Entry = { usd: number; at: number }
 
-const publish = async ($: EngineInterface) => {
-  const [id, { cost }, at] = await Promise.all([$.session.id(), $.session.usage(), $.clock.now()])
+// The first session id this module saw, kept across a /clear: a new id whose
+// entry started at the old cost would read as all of that spent at once.
+let self: Promise<string> | undefined
+
+const me = ($: EngineInterface) => (self ??= $.session.id())
+
+const write = async ($: EngineInterface) => {
+  const [id, { cost }, at] = await Promise.all([me($), $.session.usage(), $.clock.now()])
 
   if (cost) {
     await $.store.set(`${SPEND}${id}`, { usd: cost.usd, at } satisfies Entry)
   }
 }
 
+// One write at a time, in order: parallel subagents finish steps together, and
+// an older figure landing last would read to the other sessions as a total
+// that went down, counting this session's whole spend as new.
+let publishing = Promise.resolve()
+
+const publish = ($: EngineInterface) => {
+  publishing = publishing.then(() => write($)).catch(() => {})
+
+  return publishing
+}
+
 const readLedger = async ($: EngineInterface, now: number) => {
   const ledger: Record<string, number> = {}
 
-  for (const key of (await $.store.keys()).filter(key => key.startsWith(SPEND))) {
-    const entry = (await $.store.get(key)) as Entry | undefined
+  const keys = (await $.store.keys()).filter(key => key.startsWith(SPEND))
+  const entries = await Promise.all(keys.map(key => $.store.get(key) as Promise<Entry | undefined>))
+  const stale: Promise<void>[] = []
+
+  keys.forEach((key, i) => {
+    const entry = entries[i]
 
     if (!entry || now - entry.at > STALE) {
-      await $.store.delete(key)
+      stale.push($.store.delete(key))
     } else {
       ledger[key.slice(SPEND.length)] = entry.usd
     }
-  }
+  })
+  await Promise.all(stale)
 
   return ledger
 }
 
 const track = async ($: EngineInterface) => {
-  const [usage, id, now] = await Promise.all([$.session.usage(), $.session.id(), $.clock.now()])
+  const [usage, id, now] = await Promise.all([$.session.usage(), me($), $.clock.now()])
   const ledger = await readLedger($, now)
 
   // Our own figure is the freshest there is, whatever the store holds yet
@@ -93,13 +115,15 @@ export const register: Register = on => {
   // awaited, so the next step never waits on the store.
   on('turn.step', async function* ($, e, next) {
     const result = yield* next(e)
-    void publish($).catch(() => {})
+    void publish($)
 
     return result
   })
 
   // After each turn: counts every reply, including the first after a /clear.
+  // Publishes too, as the cost a step adds may land only after its turn.step.
   on('session.measure', async ($, e, next) => {
+    void publish($)
     await track($)
 
     return next(e)

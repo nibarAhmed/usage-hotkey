@@ -18,9 +18,9 @@ const rolled = (held: string | undefined, seen: string | undefined) =>
 // every session's. This session's part of it is its part of what all of them
 // spent meanwhile. A total that went down started over (a /clear). Nothing spent
 // anywhere means the points came from outside Claude Code, so none are ours.
-// Without a ledger every point is ours, as before there was one.
+// Without a ledger (or an empty one) every point is ours, as before there was one.
 export const share = (held: Record<string, number> | undefined, spend: Spend | undefined): number => {
-  if (!spend) {
+  if (!spend || Object.keys(spend.ledger).length === 0) {
     return 1
   }
 
@@ -39,7 +39,10 @@ export const share = (held: Record<string, number> | undefined, spend: Spend | u
 // what each window used but keeps its last reading, so the first reply of the new
 // conversation is counted from where the old one left off. After a roll-over the
 // new window counts from 0, so its whole percentage is gained since the last
-// reading. Each gain is scaled by this session's share of the spending.
+// reading. Each gain is scaled by this session's share of the spending. The
+// spending baseline only moves on with a reading that moved: a press or a
+// measurement with no new figures leaves it, so what others spent meanwhile is
+// still set against the rise it shows up with.
 export const observe = (
   tally: Tally | undefined,
   startedAt: number,
@@ -49,6 +52,7 @@ export const observe = (
   const isNew = tally?.startedAt !== startedAt
   const part = share(tally?.ledger, spend)
   const windows: Record<string, Window> = {}
+  let moved = !tally?.ledger
 
   for (const { kind, percentUsed, resetsAt } of limits) {
     const held = tally?.windows[kind]
@@ -57,8 +61,10 @@ export const observe = (
     if (!held) {
       windows[kind] = { used, last: percentUsed, resetsAt }
     } else if (rolled(held.resetsAt, resetsAt) || percentUsed < held.last) {
+      moved = true
       windows[kind] = { used: used + percentUsed * part, last: percentUsed, resetsAt }
     } else {
+      moved ||= percentUsed !== held.last
       windows[kind] = { used: used + (percentUsed - held.last) * part, last: percentUsed, resetsAt }
     }
   }
@@ -68,5 +74,5 @@ export const observe = (
     windows[kind] ??= isNew ? { ...held, used: 0 } : held
   }
 
-  return { startedAt, windows, ledger: spend?.ledger }
+  return { startedAt, windows, ledger: moved ? spend?.ledger : tally?.ledger }
 }

@@ -62,6 +62,14 @@ describe('observe', () => {
     tally = observe(tally, 1, [five(25)], { me: 'a', ledger: { a: 1, b: 1 } })
     expect(used(tally)).toEqual({ five_hour: 0 })
   })
+
+  test('a reading that moved nothing keeps the spending baseline', () => {
+    let tally = observe(undefined, 1, [five(20)], { me: 'a', ledger: { a: 1, b: 1 } })
+    // A press while b works: no new figures, b's spending so far must still count
+    tally = observe(tally, 1, [five(20)], { me: 'a', ledger: { a: 1, b: 1.5 } })
+    tally = observe(tally, 1, [five(24)], { me: 'a', ledger: { a: 1.5, b: 1.5 } })
+    expect(used(tally)).toEqual({ five_hour: 2 })
+  })
 })
 
 describe('share', () => {
@@ -71,5 +79,6 @@ describe('share', () => {
 
   test('without a ledger every point is ours', () => {
     expect(share(undefined, undefined)).toBe(1)
+    expect(share(undefined, { me: 'a', ledger: {} })).toBe(1)
   })
 })
