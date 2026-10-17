@@ -5,6 +5,12 @@ Claude Code usage: context tokens, session and weekly limits with reset times,
 how many percent of each limit the current conversation has used (counted
 since launch or the last `/clear`), then cost.
 
+The limits are your account's, shared by every session, so the plugin splits
+each rise between the sessions running at the time by what each spent
+(subagents included). Two conversations side by side each speak their own part,
+not the sum. Usage outside Claude Code, such as claude.ai, is not counted, and
+the split follows cost, which only approximates how the limits weigh usage.
+
 ## Requirements
 
 - Windows with NVDA running.

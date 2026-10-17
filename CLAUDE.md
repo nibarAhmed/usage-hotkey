@@ -28,6 +28,8 @@ Data flow on a key press:
 
 Per-conversation usage: `register.tsx` keeps a module-level `Tally` (`hooks/tally.ts`) and folds every reading into it with `observe`, on each `session.measure` (after every turn) and on each press. A new `startedAt` (launch or `/clear`; the module stays loaded across `/clear`) zeroes the counts but keeps the last reading as the baseline, so the new conversation's first reply is counted. A later `resetsAt` or a drop in percent is a window roll-over. Readings only change on API responses, and the very first reply after launch has no earlier baseline, so it is not counted.
 
+The windows' percentages are account-wide, so every gain is scaled by this session's `share` (in `tally.ts`) of what all sessions spent since the last reading. Each session publishes `usage.cost.usd` (which includes subagents) under `spend:<session id>` in `$.store` after every `turn.step`, subagent steps included; the store is one JSON file that concurrent sessions read live and write without losing each other's keys (both checked with two `claude -p` runs). Entries unwritten for 7 days are pruned. Gains while no session spent anything (claude.ai use) count as 0 here; with no ledger at all the share is 1. A `--plugin-dir` copy has its own store, separate from the installed plugin's.
+
 ## Conventions
 
 - Tests: `hooks/format.test.ts` covers the pure formatter; `hooks/tally.test.ts` covers `observe`; `hooks/band.test.ts` mounts `AbovePrompt` via `$.ui.mount` (with an `on('ui.render')` stand-in for other mods) and checks the button's key/props and the terminal-only / no-survey guards.
