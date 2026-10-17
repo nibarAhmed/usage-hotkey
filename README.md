@@ -9,7 +9,13 @@ The limits are your account's, shared by every session, so the plugin splits
 each rise between the sessions running at the time by what each spent
 (subagents included). Two conversations side by side each speak their own part,
 not the sum. Usage outside Claude Code, such as claude.ai, is not counted, and
-the split follows cost, which only approximates how the limits weigh usage.
+the split follows cost, which only approximates how the limits weigh usage. A
+conversation that runs across a reset adds what it used of both windows, so it
+can pass 100 percent; within one window it never does.
+
+Each session keeps its last 20 limit readings in the plugin's store
+(`~/.claude/plugins/store/usage-hotkey_*.json`, under its `spend:` entry), so a
+figure that sounds wrong can be traced back to the readings it came from.
 
 ## Requirements
 

@@ -12,9 +12,15 @@ export type Spend = { me: string; ledger: Ledger }
 
 export type Tally = { startedAt: number; windows: Record<string, Window>; ledger?: Ledger }
 
-// A later reset time than the one held means the window rolled over.
-const rolled = (held: string | undefined, seen: string | undefined) =>
-  held !== undefined && seen !== undefined && Date.parse(seen) - Date.parse(held) > 60000
+// A new window resets a whole window length after the old one did, so only a
+// reset time an hour or more later is a roll-over: one that shifts by minutes is
+// the same window. Without both reset times, a drop is all there is to go by.
+const ROLL = 60 * 60 * 1000
+
+const rolled = (held: Window, percentUsed: number, seen: string | undefined) =>
+  held.resetsAt !== undefined && seen !== undefined
+    ? Date.parse(seen) - Date.parse(held.resetsAt) >= ROLL
+    : percentUsed < held.last
 
 // The windows are the account's, so what they gained since the last reading is
 // every session's. This session's part of it is its part of what all of them
@@ -41,7 +47,9 @@ export const share = (held: Ledger | undefined, spend: Spend | undefined): numbe
 // what each window used but keeps its last reading, so the first reply of the new
 // conversation is counted from where the old one left off. After a roll-over the
 // new window counts from 0, so its whole percentage is gained since the last
-// reading. Each gain is scaled by this session's share of the spending. The
+// reading. A dip within the same window (a reply that landed late) adds nothing
+// and keeps the higher figure, so the climb back is not counted twice. Each gain
+// is scaled by this session's share of the spending. The
 // spending baseline only moves on with a reading that moved: a press or a
 // measurement with no new figures leaves it, so what others spent meanwhile is
 // still set against the rise it shows up with.
@@ -62,12 +70,14 @@ export const observe = (
 
     if (!held) {
       windows[kind] = { used, last: percentUsed, resetsAt }
-    } else if (rolled(held.resetsAt, resetsAt) || percentUsed < held.last) {
+    } else if (rolled(held, percentUsed, resetsAt)) {
       moved = true
       windows[kind] = { used: used + percentUsed * part, last: percentUsed, resetsAt }
     } else {
-      moved ||= percentUsed !== held.last
-      windows[kind] = { used: used + (percentUsed - held.last) * part, last: percentUsed, resetsAt }
+      const gain = Math.max(0, percentUsed - held.last)
+
+      moved ||= gain > 0
+      windows[kind] = { used: used + gain * part, last: held.last + gain, resetsAt }
     }
   }
 
@@ -77,4 +87,28 @@ export const observe = (
   }
 
   return { startedAt, windows, ledger: moved ? spend?.ledger : tally?.ledger }
+}
+
+// One reading as the log keeps it: when, what each window read, and what this
+// conversation had used of each after it.
+export type Reading = {
+  at: number
+  limits: readonly SessionRateLimit[]
+  used: Record<string, number>
+}
+
+// The readings kept, enough to see what a wrong figure was built from.
+export const LOG = 20
+
+// Adds a reading to the end of the log, dropping the oldest past LOG. One whose
+// windows read the same as the last one's (a press between replies) is left out,
+// and the log handed back as it was.
+export const logReading = (log: readonly Reading[], reading: Reading): readonly Reading[] => {
+  const last = log[log.length - 1]
+
+  if (last && JSON.stringify(last.limits) === JSON.stringify(reading.limits)) {
+    return log
+  }
+
+  return [...log, reading].slice(-LOG)
 }
