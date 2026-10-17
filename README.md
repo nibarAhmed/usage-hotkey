@@ -2,7 +2,8 @@
 
 A Claude Code plugin for screen reader users. Press one key and NVDA speaks your
 Claude Code usage: context tokens, session and weekly limits with reset times,
-and cost.
+cost, and how many percent of each limit the current conversation has used
+(counted since launch or the last `/clear`).
 
 ## Requirements
 

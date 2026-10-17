@@ -1,5 +1,7 @@
 import type { SessionRateLimit, SessionUsage } from 'claude-code'
 
+import type { Tally } from './tally'
+
 const LABELS: Record<string, string> = {
   five_hour: 'Session',
   seven_day: 'Weekly',
@@ -73,11 +75,22 @@ const describeContext = ({ tokens, window }: SessionUsage['context']): string =>
   return `Context ${count(tokens)} of ${count(window)} tokens`
 }
 
-export const describeUsage = (usage: SessionUsage, now: number): string => {
+// One decimal, as the windows report it, without float noise or a trailing ".0".
+const points = (n: number) => String(Number(Math.max(0, n).toFixed(1)))
+
+const describeTally = (tally: Tally | undefined): string[] => {
+  const used = Object.entries(tally?.windows ?? {}).map(
+    ([kind, { used }]) => `${points(used)} percent of ${LABELS[kind] ?? kind}`
+  )
+
+  return used.length ? [`This conversation used ${used.join(', ')}`] : []
+}
+
+export const describeUsage = (usage: SessionUsage, now: number, tally?: Tally): string => {
   const limits = usage.rateLimits.length
     ? usage.rateLimits.map(limit => describeLimit(limit, now))
     : ['No usage limit reading yet']
   const cost = usage.cost ? [`Cost ${usage.cost.usd.toFixed(2)} dollars`] : []
 
-  return `${[describeContext(usage.context), ...limits, ...cost].join('. ')}.`
+  return `${[describeContext(usage.context), ...limits, ...cost, ...describeTally(tally)].join('. ')}.`
 }

@@ -53,6 +53,24 @@ describe('describeUsage', () => {
     )
   })
 
+  test('ends with what this conversation used of each window, after the cost', () => {
+    expect(
+      describeUsage(
+        { context: { window: 200000 }, cost: { usd: 1 }, rateLimits: [] } as never,
+        NOW,
+        {
+          startedAt: NOW,
+          windows: {
+            five_hour: { used: 3.4000000000000004, last: 23.5 },
+            seven_day: { used: 0, last: 41 }
+          }
+        }
+      )
+    ).toBe(
+      'Context window 200,000 tokens, no reading yet. No usage limit reading yet. Cost 1.00 dollars. This conversation used 3.4 percent of Session, 0 percent of Weekly.'
+    )
+  })
+
   test('says so when there is no reading', () => {
     expect(describeUsage({ context: { window: 200000 }, rateLimits: [] } as never, NOW)).toBe(
       'Context window 200,000 tokens, no reading yet. No usage limit reading yet.'
