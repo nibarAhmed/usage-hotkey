@@ -88,36 +88,3 @@ export const observe = (
 
   return { startedAt, windows, ledger: moved ? spend?.ledger : tally?.ledger }
 }
-
-// One reading as the log keeps it: when, what each window read, and what this
-// conversation had used of each after it.
-export type Reading = {
-  at: number
-  limits: readonly SessionRateLimit[]
-  used: Record<string, number>
-}
-
-// The readings kept, enough to see what a wrong figure was built from.
-export const LOG = 20
-
-// Adds a reading, and the tally after it, to the end of the log, dropping the
-// oldest past LOG. One whose windows read the same as the last one's (a press
-// between replies) is left out, and the log handed back as it was.
-export const logReading = (
-  log: readonly Reading[],
-  at: number,
-  limits: readonly SessionRateLimit[],
-  tally: Tally
-): readonly Reading[] => {
-  const last = log[log.length - 1]
-
-  if (last && JSON.stringify(last.limits) === JSON.stringify(limits)) {
-    return log
-  }
-
-  const used = Object.fromEntries(
-    Object.entries(tally.windows).map(([kind, w]) => [kind, Number(w.used.toFixed(1))])
-  )
-
-  return [...log, { at, limits, used }].slice(-LOG)
-}

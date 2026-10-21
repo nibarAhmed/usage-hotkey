@@ -1,7 +1,7 @@
 import type { EngineInterface, Register } from 'claude-code'
 
 import { describeUsage } from './format'
-import { logReading, observe, type Ledger, type Reading, type Tally } from './tally'
+import { observe, type Ledger, type Tally } from './tally'
 
 // An engine action with no default chord and no handler at the prompt; the
 // person binds a chord such as ctrl+u to it in keybindings.json (Global),
@@ -17,16 +17,11 @@ let tally: Tally | undefined
 // Every session writes what it has spent so far (subagents included) under its
 // own key in the plugin's store, one JSON file that all running sessions read
 // live; the tally splits the account's gains by it. An entry not written for a
-// week is a session long gone. The entry also carries this session's last few
-// readings, to look back on when a spoken figure seems wrong.
+// week is a session long gone.
 const SPEND = 'spend:'
 const STALE = 7 * 24 * 60 * 60 * 1000
 
-type Entry = { usd: number; at: number; readings?: readonly Reading[] }
-
-// A new log is a new array (logReading hands back the same one when it skips),
-// so write() tells a changed log from the one it last wrote by reference.
-let readings: readonly Reading[] = []
+type Entry = { usd: number; at: number }
 
 // The first session id this module saw, kept across a /clear: a new id whose
 // entry started at the old cost would read as all of that spent at once.
@@ -34,7 +29,7 @@ let self: Promise<string> | undefined
 
 const me = ($: EngineInterface) => (self ??= $.session.id())
 
-// What was last written, so a step that spent nothing new and logged no reading
+// What was last written, so a step that spent nothing new
 // (a burst of queued writes reads one figure) skips the store. A figure is still
 // rewritten when its last write is over an hour old, so a session that steps
 // without spending keeps its entry fresh; one with no steps at all writes nothing.
@@ -44,8 +39,8 @@ const REFRESH = 60 * 60 * 1000
 const write = async ($: EngineInterface) => {
   const [id, { cost }, at] = await Promise.all([me($), $.session.usage(), $.clock.now()])
 
-  if (cost && (cost.usd !== written?.usd || readings !== written.readings || at - written.at > REFRESH)) {
-    const entry: Entry = { usd: cost.usd, at, readings }
+  if (cost && (cost.usd !== written?.usd || at - written.at > REFRESH)) {
+    const entry: Entry = { usd: cost.usd, at }
 
     // Only remembered once it landed, so a failed write is tried again next step
     await $.store.set(`${SPEND}${id}`, entry)
@@ -96,15 +91,6 @@ const track = async ($: EngineInterface) => {
   }
 
   tally = observe(tally, usage.startedAt, usage.rateLimits, { me: id, ledger })
-
-  if (usage.rateLimits.length) {
-    const next = logReading(readings, now, usage.rateLimits, tally)
-
-    if (next !== readings) {
-      readings = next
-      publish($)
-    }
-  }
 
   return usage
 }

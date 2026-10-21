@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'claude-code/testing'
 
-import { LOG, logReading, observe, share, type Reading } from './tally'
+import { observe, share } from './tally'
 
 const RESET = '2026-10-17T15:00:00.000Z'
 const LATER = '2026-10-17T20:00:00.000Z'
@@ -110,36 +110,5 @@ describe('share', () => {
   test('without a ledger every point is ours', () => {
     expect(share(undefined, undefined)).toBe(1)
     expect(share(undefined, { me: 'a', ledger: {} })).toBe(1)
-  })
-})
-
-describe('logReading', () => {
-  const tally = observe(undefined, 1, [five(20)])
-  const add = (log: readonly Reading[], at: number, percentUsed: number) =>
-    logReading(log, at, [five(percentUsed)], tally)
-
-  test('keeps the last readings, oldest dropped first', () => {
-    let log: readonly Reading[] = []
-
-    for (let at = 0; at < LOG + 5; at++) {
-      log = add(log, at, at)
-    }
-
-    expect(log).toHaveLength(LOG)
-    expect(log[0]?.at).toBe(5)
-    expect(log[LOG - 1]?.at).toBe(LOG + 4)
-  })
-
-  test('a reading the same as the last one is left out, handing the log back as it was', () => {
-    const log = add([], 1, 20)
-
-    expect(add(log, 2, 20)).toBe(log)
-    expect(add(log, 3, 21)).toHaveLength(2)
-  })
-
-  test("keeps what the conversation had used of each window, to one decimal", () => {
-    const log = logReading([], 1, [five(20)], observe(observe(undefined, 1, [five(20)]), 1, [five(21.25)]))
-
-    expect(log[0]?.used).toEqual({ five_hour: 1.3 })
   })
 })

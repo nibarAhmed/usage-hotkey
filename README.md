@@ -13,10 +13,6 @@ the split follows cost, which only approximates how the limits weigh usage. A
 conversation that runs across a reset adds what it used of both windows, so it
 can pass 100 percent; within one window it never does.
 
-Each session keeps its last 20 limit readings in the plugin's store
-(`~/.claude/plugins/store/usage-hotkey_*.json`, under its `spend:` entry), so a
-figure that sounds wrong can be traced back to the readings it came from.
-
 ## Requirements
 
 - Windows with NVDA running.
